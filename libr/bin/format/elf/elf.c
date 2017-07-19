@@ -2405,7 +2405,6 @@ static RBinElfSection* get_sections_from_phdr(ELFOBJ *bin) {
 		i++;
 	}
 	ret[i].last = 1;
-
 	return ret;
 }
 
@@ -2493,18 +2492,20 @@ RBinElfSection* Elf_(r_bin_elf_get_sections)(ELFOBJ *bin) {
 		ps = phdr_sections;
 		int j;
 		while (!ps->last) {
-			for (j = 0; j < bin->ehdr.e_shnum; j++) {
+			for (j = 0; j < i; j++) {
 				if (!strcmp (ret[j].name, ps->name)) {
-					ps++;
-					continue;
+					goto next;
 				}
 			}
+			i++;
+			memset (&ret[i], 0, sizeof (ret[i]));
+			ret[i].last = 0;
 			strcpy (ret[i].name, ps->name);
 			ret[i].last = 0;
 			ret[i].size = ps->size;
 			ret[i].offset = ps->offset;
 			ret[i].rva = ps->rva;
-			i++;
+next:
 			ps++;
 		}
 	}
