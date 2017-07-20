@@ -1135,7 +1135,7 @@ static ut64 get_import_addr(ELFOBJ *bin, int sym) {
 		j = 0;
 		while (!rel_sec && rel_sect[j]) {
 			rel_sec = get_section_by_name (bin, rel_sect[j++]);
-			if (!rel_sec->offset) {
+			if (rel_sec && !rel_sec->offset) {
 				rel_sec = 0;
 			}
 		}
@@ -1253,6 +1253,9 @@ static ut64 get_import_addr(ELFOBJ *bin, int sym) {
 			case EM_ARM:
 			case EM_AARCH64:
 				plt_addr = Elf_(r_bin_elf_get_section_addr) (bin, ".plt");
+				if (plt_addr == 0) {
+					plt_addr = Elf_(r_bin_elf_get_section_addr_end) (bin, ".rela.plt");
+				}
 				if (plt_addr == -1) {
 					free (rela);
 					return UT32_MAX;
@@ -2475,7 +2478,6 @@ RBinElfSection* Elf_(r_bin_elf_get_sections)(ELFOBJ *bin) {
 			while (!ps->last) {
 				if (!strcmp (ps->name, ret[i].name)) {
 					if (!ret[i].offset) {
-						eprintf ("Phdring %s\n", ret[i].name);
 						ret[i].offset = ps->offset;
 						ret[i].size = ps->size;
 						ret[i].rva = ps->rva;
@@ -2497,7 +2499,6 @@ RBinElfSection* Elf_(r_bin_elf_get_sections)(ELFOBJ *bin) {
 					goto next;
 				}
 			}
-			i++;
 			memset (&ret[i], 0, sizeof (ret[i]));
 			ret[i].last = 0;
 			strcpy (ret[i].name, ps->name);
@@ -2505,6 +2506,7 @@ RBinElfSection* Elf_(r_bin_elf_get_sections)(ELFOBJ *bin) {
 			ret[i].size = ps->size;
 			ret[i].offset = ps->offset;
 			ret[i].rva = ps->rva;
+			i++;
 next:
 			ps++;
 		}
